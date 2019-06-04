@@ -318,7 +318,7 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
                     replaceAll(':description:', description).
                     replaceAll(':URL:', repoConfig['URL']).
                     replaceAll(':jobName:', repoConfig['jobName']).
-                    replaceAll(':scriptPath:', 'Jenkinsfile').
+                    replaceAll(':scriptPath:', repoConfig['scriptPath']).
                     replaceAll(':credentialsId:', repoConfig['credentialsId'])
     )
     configs
