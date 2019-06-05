@@ -221,13 +221,15 @@ def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, String dslS
 def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate, def ENVIRONMENTS){
     def configs = []
 
-    ENVIRONMENTS.each { env->
+    ENVIRONMENTS.each {
         //regression jobs for develop, for each browser and environment, every 60 mins
-        description = "This is the regression job for project ${repoName}  and environment ${env}. By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
+        description = "This is the regression job for project ${repoName}  and environment ${it.env}. By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
         description += "They run regularly twice a day with cron job."
 
         println "ENV: $env"
-        configs.add(getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.REGRESSION, description, env))
+        configs.add(
+                getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.REGRESSION, description, it.env)
+        )
 
     }
 
@@ -270,7 +272,7 @@ node() {
             dslScripts += generateFeatureJobConfigs(repoName, repoConfig, dslScriptTemplate)
 
             println "Generating functional tests regression jobs configs: "
-           // dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,ENVIRONMENTS)
+            dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,ENVIRONMENTS)
 
             println "Generating standalone jobs configs"
             //stand-alone jobs
