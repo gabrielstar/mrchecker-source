@@ -223,7 +223,7 @@ def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslS
 
     ENVIRONMENTS.each { env->
         //regression jobs for develop, for each browser and environment, every 60 mins
-        description = "This is the regression job for project ${repoName}  and environment ${it.env}. By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
+        description = "This is the regression job for project ${repoName}  and environment ${env}. By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
         description += "They run regularly twice a day with cron job."
 
         println "ENV: $env"
