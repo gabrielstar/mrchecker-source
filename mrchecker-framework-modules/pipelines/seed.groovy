@@ -157,7 +157,7 @@ def getRegressionJobFor(String projectName,String env,String branch) {
 }
 
 
-def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, String description, String env) {
+def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description, String env) {
     jobConfig['oldItemsNumKeep'] = jobConfig['oldItemsNumKeep'] ?: 1
     jobConfig['oldItemsDaysKeep'] = jobConfig['oldItemsDaysKeep'] ?: 1
 
@@ -207,7 +207,7 @@ repoJobConfigs.put('Checker',
 
 
 //generates functional feature jobs for all branches, with default environment, testers can change
-def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate){
+def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, String dslScriptTemplate){
     List<JobConfig> configs = []
 
     def description = "This is the feature job for project ${repoName} for. By default it runs all tests that are tagged with branch name e.g. @SAF-203. All feature branches get their own jobs. They need to be triggered manually."
