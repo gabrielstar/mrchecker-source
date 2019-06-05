@@ -256,7 +256,7 @@ repoJobConfigs.put('Checker',
                 URL: 'https://github.com/gabrielstar/mrchecker-source.git',
                 jobName: 'Checker',
                 credentialsId: "",
-                scriptPath: 'mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
+                scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
         )
 )
 
