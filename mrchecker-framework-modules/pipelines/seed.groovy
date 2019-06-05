@@ -270,7 +270,7 @@ node() {
             dslScripts += generateFeatureJobConfigs(repoName, repoConfig, dslScriptTemplate)
 
             println "Generating functional tests regression jobs configs: "
-            dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,ENVIRONMENTS)
+           // dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,ENVIRONMENTS)
 
             println "Generating standalone jobs configs"
             //stand-alone jobs
