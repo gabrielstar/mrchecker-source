@@ -209,24 +209,16 @@ def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, 
     def trigger
 
     switch (jobType) {
-        case JOB_TYPES.PERFORMANCE_FEATURE:
         case JOB_TYPES.FEATURE:
             includes = "*"
             excludes = "master"
             trigger = "periodic(15)"
             break
-        case JOB_TYPES.PERFORMANCE_REGRESSION:
         case JOB_TYPES.REGRESSION:
             includes = "*develop"
             excludes = "fakefoo" //otherwise trait will throw error
             trigger = "periodic(60)"
             break
-        case JOB_TYPES.PIPELINE:
-            includes = "*develop"
-            excludes = "fakefoo" //otherwise trait will throw error
-            trigger = ""
-            break
-
     }
 
     return jobTemplate.
@@ -331,25 +323,6 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
     configs
 }
 
-def generatePerformanceJobConfigs(String repoName, JobConfig repoConfig, def dslPerformanceTemplate, def excludedEnvironmentsForRegression){
-    def configs = []
-    if(repoConfig.performanceJobs) {
-        repoConfig.performanceJobs.each { performanceRepoConfig ->
-            ENVIRONMENTS.each {
-                def env = replaceVariablesForEnvironments(it.env, performanceRepoConfig["jobName"])
-                if(!(env in excludedEnvironmentsForRegression)) {
-                    [JOB_TYPES.PERFORMANCE_REGRESSION, JOB_TYPES.PERFORMANCE_FEATURE].each { JOB_TYPES jobType ->
-                        configs.add(
-                                getJobForConfig(dslPerformanceTemplate, performanceRepoConfig, jobType, description, "", env).replace("..", ".")
-                        )
-                    }
-                }
-            }
-        }
-    }
-    configs
-}
-
 node() {
 
     stage("Create Folder Structure") {
@@ -373,24 +346,9 @@ node() {
             println "Generating functional tests regression jobs configs: "
             dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,browsers,ENVIRONMENTS, excludedEnvironmentsForRegression)
 
-            println "Generating integrated test pipeline jobs configs"
-            dslScripts += generateTestPipelinesJobConfigs(
-                    repoName,
-                    repoConfig,
-                    dslTestPipelineTemplate,
-                    dslScriptTemplate,
-                    pipelineBrowsers,
-                    ENVIRONMENTS,
-                    excludedEnvironmentsForRegression
-            )
-
             println "Generating standalone jobs configs"
             //stand-alone jobs
             dslScripts +=generateStandaloneJobConfigs(repoName, repoConfig, dslScriptPipelineTemplate)
-
-            println "Generating performance jobs configs"
-            //stand-alone jobs
-            dslScripts +=generatePerformanceJobConfigs(repoName, repoConfig, dslScriptTemplate, excludedEnvironmentsForRegression)
 
         }
 
@@ -398,32 +356,24 @@ node() {
 
     stage('Prepare custom Views') {
         println "Preparing custom views"
-        //project views
+        //feature
         repoJobConfigs.each {
             name, content ->
                 dslScripts.add(view.
-                        replaceAll(':name:', "2. ${name}").
-                        replaceAll(':regex:', name)
+                        replaceAll(':name:', "Feature").
+                        replaceAll(':regex:', "feature")
                 )
         }
         //regressions
         dslScripts.add(view.
-                replaceAll(':name:', '0. regressions').
+                replaceAll(':name:', 'Regressions').
                 replaceAll(':regex:', 'regression')
         )
-        //unstable
+        //standalone
         dslScripts.add(view.
-                replaceAll(':name:', '1. unstable').
-                replaceAll(':regex:', '.*')
+                replaceAll(':name:', 'Standalone').
+                replaceAll(':regex:', 'standalone')
         )
-        //browsers
-        browsers.each {
-            browser ->
-                dslScripts.add(view.
-                        replaceAll(':name:', "3. ${browser}").
-                        replaceAll(':regex:', browser)
-                )
-        }
     }
     stage('Create Jobs & Views') {
         println "Creating jobs and views"
