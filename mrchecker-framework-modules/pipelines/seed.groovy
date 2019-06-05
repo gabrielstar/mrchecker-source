@@ -25,6 +25,7 @@ folder(':folder:') {
 String dslScriptTemplate = '''
 multibranchPipelineJob(':folder:/:jobName:.:browser:.:env:') {
     description(":description:")
+    displayName(":jobName:")
     branchSources{
            branchSource {
             source {
@@ -47,6 +48,12 @@ multibranchPipelineJob(':folder:/:jobName:.:browser:.:env:') {
                 }
               }
         }    
+        factory{
+            workflowBranchProjectFactory {
+             // Relative location within the checkout of your Pipeline script.
+                scriptPath(":scriptPath:")
+            }
+        }
         orphanedItemStrategy {
             discardOldItems {
                 numToKeep(:oldItemsNumKeep:)
