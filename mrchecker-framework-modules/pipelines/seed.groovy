@@ -207,6 +207,7 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
 node() {
 
     stage("Create Folder Structure") {
+        def utils = load "CI/submodules/Utils.groovy";
         String folderDsl
         List folders = []
         folders.add(folderSource.replaceAll(':folder:', "tests"))
