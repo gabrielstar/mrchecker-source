@@ -113,20 +113,11 @@ public enum JOB_TYPES {
     }
 }
 
-//in case we ever add run-time tests
-public enum ENVIRONMENTS {
-    DEV("DEV")
-    final String env
-
-    private ENVIRONMENTS(String env) {
-        this.env = env
-    }
-}
 final String mainFolder = "tests"
 List dslScripts = []
 def credentialsId = 'CORP-TU'
 
-def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description, String env) {
+def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description) {
     jobConfig['oldItemsNumKeep'] = jobConfig['oldItemsNumKeep'] ?: 1
     jobConfig['oldItemsDaysKeep'] = jobConfig['oldItemsDaysKeep'] ?: 1
 
@@ -137,7 +128,7 @@ def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, 
     switch (jobType) {
         case JOB_TYPES.FEATURE:
             includes = "*"
-            excludes = "master"
+            excludes = "master develop"
             trigger = "periodic(15)"
             break
         case JOB_TYPES.REGRESSION:
@@ -158,8 +149,7 @@ def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, 
             replaceAll(':credentialsId:', jobConfig['credentialsId']).
             replaceAll(':includes:', includes).
             replaceAll(':excludes:', excludes).
-            replaceAll(':trigger:', trigger).
-            replaceAll(':env:', env)
+            replaceAll(':trigger:', trigger)
 }
 
 
@@ -168,39 +158,33 @@ Map<String, JobConfig> repoJobConfigs = [:]
 repoJobConfigs.put('Checker',
         new JobConfig(
                 URL: 'https://github.com/gabrielstar/mrchecker-source.git',
-                jobName: 'Checker',
+                jobName: 'MrChecker',
                 credentialsId: "",
                 scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
         )
 )
 
-
-//generates functional feature jobs for all branches, with default environment, testers can change
+//generates functional feature jobs for all branches
 def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, String dslScriptTemplate){
     List<JobConfig> configs = []
 
     def description = "This is the feature job for project ${repoName} for. By default it runs all tests that are tagged with branch name e.g. @SAF-203. All feature branches get their own jobs. They need to be triggered manually."
     configs.add(
-            getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.FEATURE, description, "")
+            getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.FEATURE, description)
     )
 
     configs
 }
 
-def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate, def ENVIRONMENTS){
-    def configs = []
+def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate){
+    List<JobConfig> configs = []
 
-    ENVIRONMENTS.each {
-        //regression jobs for develop, for each browser and environment, every 60 mins
-        description = "This is the regression job for project ${repoName}  and environment ${it.env}. By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
-        description += "They run regularly twice a day with cron job."
+    def description = "This is the regression job for project ${repoName} . By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
+    description += "They run regularly twice a day with cron job."
 
-        println "ENV: $env"
-        configs.add(
-                getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.REGRESSION, description, it.env)
-        )
-
-    }
+    configs.add(
+            getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.REGRESSION, description)
+    )
 
     configs
 }
@@ -241,7 +225,7 @@ node() {
             dslScripts += generateFeatureJobConfigs(repoName, repoConfig, dslScriptTemplate)
 
             println "Generating functional tests regression jobs configs: "
-            dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate,ENVIRONMENTS)
+            dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate)
 
             println "Generating standalone jobs configs"
             //stand-alone jobs
