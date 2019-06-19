@@ -1,10 +1,11 @@
+configureBranchSpecificEnvironmentVariables()
 node(){
 	
 	//Set Jenkins run parameters
 	properties([
 		parameters([
 			string(defaultValue: 'mrchecker-framework-modules/mrchecker-webapi-module/', description: 'Execute job for given Module. Example mrchecker-framework-modules/mrchecker-webapi-module/ ', name: 'APP_WORKSPACE'),
-			string(defaultValue: 'develop', description: 'Execute job on given branch', name: 'WORKING_BRANCH'), 
+			string(defaultValue: "${env.branch}", description: 'Execute job on given branch', name: 'WORKING_BRANCH'),
 			string(defaultValue: '*', description: '''What tests to run
 HelloWorld - run test class -HelloWorld-
 Hel*orld - run all test classes start with -Hel- and end with -orld-  
@@ -30,7 +31,7 @@ https://oss.sonatype.org/content/repositories/snapshots/com/capgemini/ntc/''', n
 			string(defaultValue: 'https://github.com/devonfw-forge/mrchecker-source.git', description: 'Optional variable. Which repo to run', name: 'GIT_REPO'),
 			string(defaultValue: '', description: 'Optional list of mvn parameters, example -DskipTests=true -Dtest=*', name: 'MVN_PARAMETERS')
 			]), 
-			pipelineTriggers([])
+			pipelineTriggers([cron(env.cron)])
 		]);
 	
 
@@ -179,5 +180,17 @@ void stageGitPull(){
         module.tryMergeWithBranch(env.MAIN_BRANCH);
     }       
 }
+//sets pipeline default execution branch and trigger based on job name (convention)
+def configureBranchSpecificEnvironmentVariables(){
+    print "jobName: ${env.JOB_NAME}"
+    if("${env.JOB_NAME}".contains("regression") && !"${env.JOB_NAME}".contains("feature")){
+        env.cron="H H(15-17),H(2-3) * * *" //twice daily, spreaded
+    }else if(env.BRANCH_NAME){
+        env.cron="0 H(5-6) 6 * *" //once a week on Saturday
+    }else{
+        env.cron=""
+    }
 
+    env.branch="${env.BRANCH_NAME}" ?: "develop"
+}
 return this
