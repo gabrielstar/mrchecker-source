@@ -1,3 +1,4 @@
+configureBranchSpecificEnvironmentVariables()
 node(){
 	
 	//Set Jenkins run parameters
@@ -182,5 +183,17 @@ void stageGitPull(){
         module.tryMergeWithBranch(env.MAIN_BRANCH);
     }       
 }
+//sets pipeline default execution branch and trigger based on job name (convention)
+def configureBranchSpecificEnvironmentVariables(){
+	print "jobName: ${env.JOB_NAME}"
+	if("${env.JOB_NAME}".contains("regression") && !"${env.JOB_NAME}".contains("feature")){
+		env.cron="H H(15-17),H(2-3) * * *" //twice daily, spreaded
+	}else if(env.BRANCH_NAME){
+		env.cron="0 H(5-6) 6 * *" //once a week on Saturday
+	}else{
+		env.cron=""
+	}
 
+	env.branch="${env.BRANCH_NAME}" ?: "develop"
+}
 return this

@@ -259,8 +259,8 @@ node() {
         enabledModules.each{
             moduleName ->
                 dslScripts.add(view.
-                        replaceAll(':name:', moduleName.split("-").last()).
-                        replaceAll(':regex:', "${moduleName}.*")
+                        replaceAll(':name:',"m." + moduleName.split("-").last()).
+                        replaceAll(':regex:', "${moduleName}.+")
                 )
         }
     }
