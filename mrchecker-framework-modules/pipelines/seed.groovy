@@ -242,7 +242,7 @@ node() {
             name, content ->
                 dslScripts.add(view.
                         replaceAll(':name:', "feature").
-                        replaceAll(':regex:', "feature.*checker.+")
+                        replaceAll(':regex:', "feature.*checker.*\s.+")
                 )
         }
         //regressions
