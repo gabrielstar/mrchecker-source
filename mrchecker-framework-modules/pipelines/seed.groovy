@@ -242,18 +242,18 @@ node() {
             name, content ->
                 dslScripts.add(view.
                         replaceAll(':name:', "Feature").
-                        replaceAll(':regex:', "feature.*checker.*")
+                        replaceAll(':regex:', "feature.*checker.+")
                 )
         }
         //regressions
         dslScripts.add(view.
                 replaceAll(':name:', 'Regressions').
-                replaceAll(':regex:', 'regression.*')
+                replaceAll(':regex:', 'regression.*checker.+')
         )
         //standalone
         dslScripts.add(view.
                 replaceAll(':name:', 'Standalone').
-                replaceAll(':regex:', 'standalone')
+                replaceAll(':regex:', 'standalone.+')
         )
     }
     stage('Create Jobs & Views') {
