@@ -1,3 +1,4 @@
+// CONFIG START
 class JobConfig {
     def URL
     def oldItemsNumKeep = '3'
@@ -91,6 +92,9 @@ public enum JOB_TYPES {
     }
 }
 
+//CONFIG END
+
+//replaces jenkins template variables
 def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description) {
     jobConfig['oldItemsNumKeep'] = jobConfig['oldItemsNumKeep'] ?: 1
     jobConfig['oldItemsDaysKeep'] = jobConfig['oldItemsDaysKeep'] ?: 1
@@ -134,6 +138,7 @@ def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, String dslS
     configs
 }
 
+//generates regression jobs
 def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate){
     List<JobConfig> configs = []
     def description = "This is the regression job for project ${repoName} . By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
@@ -144,6 +149,7 @@ def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslS
     configs
 }
 
+//generates standalone jobs
 def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslScriptPipelineTemplate){
     def configs = []
     def description = ""
@@ -161,22 +167,25 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
 
 Map<String, JobConfig> repoJobConfigs = [:]
 def credentialsId = ''
+def enabledModules = ['mrchecker-webapi','mrchecker-selenium']
 
-repoJobConfigs.put('mrchecker-webapi',
-        new JobConfig(
-                URL: 'https://github.com/gabrielstar/mrchecker-source.git',
-                jobName: 'mrchecker-webapi',
-                credentialsId: credentialsId,
-                scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
+enabledModules.each{
+    moduleName ->
+        repoJobConfigs.put(moduleName,
+                new JobConfig(
+                        URL: 'https://github.com/gabrielstar/mrchecker-source.git',
+                        jobName: moduleName,
+                        credentialsId: credentialsId,
+                        scriptPath: "mrchecker-framework-modules/${moduleName}-module/pipelines/CI/Jenkinsfile_node.groovy"
+                )
         )
-)
+}
+
 List dslScripts = []
 
-//Doing actual jobs generation
+//GENERATE JOBS
 node() {
-
     stage("Create Folder Structure") {
-
         String folderDsl
         List folders = []
         folders.add(folderSource.replaceAll(':folder:', "tests"))
@@ -186,7 +195,6 @@ node() {
         folderDsl = folders.join("\n")
         writeFile(file: 'folderStructure.groovy', text: folderDsl)
         jobDsl failOnMissingPlugin: true, unstableOnDeprecation: true, targets: 'folderStructure.groovy'
-
     }
     stage("Prepare Job Configurations") {
         repoJobConfigs.each { String repoName, JobConfig repoConfig ->
@@ -247,11 +255,14 @@ node() {
                 replaceAll(':name:', 'standalone').
                 replaceAll(':regex:', 'standalone.+')
         )
-        //webapi
-        dslScripts.add(view.
-                replaceAll(':name:', 'webapi').
-                replaceAll(':regex:', 'mrchecker-webapi.*')
-        )
+        //per module view
+        enabledModules.each{
+            moduleName ->
+                dslScripts.add(view.
+                        replaceAll(':name:', moduleName.split("-").last()).
+                        replaceAll(':regex:', "${moduleName}.*")
+                )
+        }
     }
     stage('Create Jobs & Views') {
         println "Creating jobs and views"
