@@ -82,7 +82,6 @@ pipelineJob(':folder:/:jobName:') {
 }
 '''
 
-
 String view = '''
             listView('tests/:name:') {
             description('')
@@ -126,36 +125,6 @@ public enum ENVIRONMENTS {
 final String mainFolder = "tests"
 List dslScripts = []
 def credentialsId = 'CORP-TU'
-
-def getRegressionJobFor(String projectName,String env,String branch) {
-    def jobRelativePath
-    def jobRoot
-    def downstreamJob
-    def jobDescription
-
-    jobRoot = "tests/regression/"
-    jobDescription = "Functional Tests Regression for $projectName"
-    jobRelativePath = "${projectName.toLowerCase()}.${replaceVariablesForEnvironments(env,projectName)}/$branch"
-
-
-    downstreamJob = "buildJob = build job: '$jobRoot$jobRelativePath',propagate:false"
-
-    return """
-        stage('$jobDescription') {
-            try{
-                $downstreamJob
-                currentBuild.result = buildJob.getResult()
-            }catch(Exception e){
-                currentBuild.result = failureStatus
-            }
-            if(currentBuild.result.contains(failureStatus)){
-                print "Stopping pipeline as test have failed"
-                error("Tests failed")
-            }
-        }
-    """
-}
-
 
 def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description, String env) {
     jobConfig['oldItemsNumKeep'] = jobConfig['oldItemsNumKeep'] ?: 1
