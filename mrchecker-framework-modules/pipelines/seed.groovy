@@ -162,10 +162,10 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
 Map<String, JobConfig> repoJobConfigs = [:]
 def credentialsId = ''
 
-repoJobConfigs.put('MrChecker',
+repoJobConfigs.put('mrchecker-webapi',
         new JobConfig(
                 URL: 'https://github.com/gabrielstar/mrchecker-source.git',
-                jobName: 'MrChecker',
+                jobName: 'mrchecker-webapi',
                 credentialsId: credentialsId,
                 scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
         )
@@ -233,24 +233,24 @@ node() {
         repoJobConfigs.each {
             name, content ->
                 dslScripts.add(view.
-                        replaceAll(':name:', "Feature").
+                        replaceAll(':name:', "feature").
                         replaceAll(':regex:', "feature.*checker.+")
                 )
         }
         //regressions
         dslScripts.add(view.
-                replaceAll(':name:', 'Regressions').
+                replaceAll(':name:', 'regression').
                 replaceAll(':regex:', 'regression.*checker.+')
         )
         //standalone
         dslScripts.add(view.
-                replaceAll(':name:', 'Standalone').
+                replaceAll(':name:', 'standalone').
                 replaceAll(':regex:', 'standalone.+')
         )
         //webapi
         dslScripts.add(view.
                 replaceAll(':name:', 'webapi').
-                replaceAll(':regex:', 'webapi.*')
+                replaceAll(':regex:', 'mrchecker-webapi.*')
         )
     }
     stage('Create Jobs & Views') {
