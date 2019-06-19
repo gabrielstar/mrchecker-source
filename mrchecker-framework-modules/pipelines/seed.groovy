@@ -82,48 +82,19 @@ pipelineJob(':folder:/:jobName:') {
 }
 '''
 
-String view = '''
-            listView('tests/:name:') {
-            description('')
-            filterBuildQueue()
-            filterExecutors()
-            jobs {
-                regex(/.*:regex:.*/)
-            }
-            recurse(true)
-            columns {
-                status()
-                weather()
-                name()
-                lastSuccess()
-                lastFailure()
-                lastDuration()
-                buildButton()
-            }
-        }
-        '''
-
-//performance feature & tests put inside because number of jobs per view grew too large
 public enum JOB_TYPES {
     FEATURE("feature"), REGRESSION("regression"), STANDALONE("standalone")
     String folder
-    String rootFolder = "tests"
-    private JOB_TYPES(String folder) {
+    String rootFolder
+    private JOB_TYPES(String rootFolder='tests',String folder) {
         this.folder = "$rootFolder/$folder"
     }
 }
 
-final String mainFolder = "tests"
-List dslScripts = []
-def credentialsId = 'CORP-TU'
-
 def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, def description) {
     jobConfig['oldItemsNumKeep'] = jobConfig['oldItemsNumKeep'] ?: 1
     jobConfig['oldItemsDaysKeep'] = jobConfig['oldItemsDaysKeep'] ?: 1
-
-    def includes
-    def excludes
-    def trigger
+    def includes, excludes, trigger
 
     switch (jobType) {
         case JOB_TYPES.FEATURE:
@@ -153,39 +124,23 @@ def getJobForConfig(String jobTemplate, JobConfig jobConfig, JOB_TYPES jobType, 
 }
 
 
-Map<String, JobConfig> repoJobConfigs = [:]
-
-repoJobConfigs.put('Checker',
-        new JobConfig(
-                URL: 'https://github.com/gabrielstar/mrchecker-source.git',
-                jobName: 'MrChecker',
-                credentialsId: "",
-                scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
-        )
-)
-
 //generates functional feature jobs for all branches
 def generateFeatureJobConfigs(String repoName, JobConfig repoConfig, String dslScriptTemplate){
     List<JobConfig> configs = []
-
-    def description = "This is the feature job for project ${repoName} for. By default it runs all tests that are tagged with branch name e.g. @SAF-203. All feature branches get their own jobs. They need to be triggered manually."
+    def description = "This is the feature job for project ${repoName} for. All feature branches get their own jobs. They need to be triggered manually."
     configs.add(
             getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.FEATURE, description)
     )
-
     configs
 }
 
 def generateRegressionJobConfigs(String repoName, JobConfig repoConfig, def dslScriptTemplate){
     List<JobConfig> configs = []
-
     def description = "This is the regression job for project ${repoName} . By default it runs all tests that are tagged with @regression tag. Only develop gets regression job by default. "
     description += "They run regularly twice a day with cron job."
-
     configs.add(
             getJobForConfig(dslScriptTemplate, repoConfig, JOB_TYPES.REGRESSION, description)
     )
-
     configs
 }
 
@@ -204,10 +159,24 @@ def generateStandaloneJobConfigs(String repoName, JobConfig repoConfig, def dslS
     configs
 }
 
+Map<String, JobConfig> repoJobConfigs = [:]
+def credentialsId = ''
+
+repoJobConfigs.put('MrChecker',
+        new JobConfig(
+                URL: 'https://github.com/gabrielstar/mrchecker-source.git',
+                jobName: 'MrChecker',
+                credentialsId: credentialsId,
+                scriptPath: 'mrchecker-framework-modules/mrchecker-webapi-module/pipelines/CI/Jenkinsfile_node.groovy'
+        )
+)
+List dslScripts = []
+
+//Doing actual jobs generation
 node() {
 
     stage("Create Folder Structure") {
-        def utils = load "CI/submodules/Utils.groovy";
+
         String folderDsl
         List folders = []
         folders.add(folderSource.replaceAll(':folder:', "tests"))
@@ -221,11 +190,11 @@ node() {
     }
     stage("Prepare Job Configurations") {
         repoJobConfigs.each { String repoName, JobConfig repoConfig ->
-            println "Generating functional tests feature jobs configs: "
-            //feature jobs for all branches, with default environment, testers can change
+            println "Generating tests feature jobs configs: "
+            //feature jobs for all branches
             dslScripts += generateFeatureJobConfigs(repoName, repoConfig, dslScriptTemplate)
 
-            println "Generating functional tests regression jobs configs: "
+            println "Generating tests regression jobs configs: "
             dslScripts += generateRegressionJobConfigs(repoName,repoConfig,dslScriptTemplate)
 
             println "Generating standalone jobs configs"
@@ -237,6 +206,28 @@ node() {
     }
 
     stage('Prepare custom Views') {
+
+        String view = '''
+            listView('tests/:name:') {
+            description('')
+            filterBuildQueue()
+            filterExecutors()
+            jobs {
+                regex(/.*:regex:.*/)
+            }
+            recurse(true)
+            columns {
+                status()
+                weather()
+                name()
+                lastSuccess()
+                lastFailure()
+                lastDuration()
+                buildButton()
+            }
+        }
+        '''
+
         println "Preparing custom views"
         //feature
         repoJobConfigs.each {
@@ -255,6 +246,11 @@ node() {
         dslScripts.add(view.
                 replaceAll(':name:', 'Standalone').
                 replaceAll(':regex:', 'standalone.+')
+        )
+        //webapi
+        dslScripts.add(view.
+                replaceAll(':name:', 'webapi').
+                replaceAll(':regex:', 'webapi.*')
         )
     }
     stage('Create Jobs & Views') {
