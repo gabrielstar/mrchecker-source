@@ -1,5 +1,5 @@
 // CONFIG START
-JobConfig {
+class JobConfig {
     def URL
     def oldItemsNumKeep = '3'
     def oldItemsDaysKeep = '1'
