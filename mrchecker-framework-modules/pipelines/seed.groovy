@@ -1,6 +1,5 @@
 // CONFIG START
-@NonCPS
-class JobConfig {
+JobConfig {
     def URL
     def oldItemsNumKeep = '3'
     def oldItemsDaysKeep = '1'
