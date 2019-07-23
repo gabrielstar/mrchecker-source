@@ -1,11 +1,20 @@
 // CONFIG START
-public class JobConfig {
+/*class JobConfig {
     def URL
     def oldItemsNumKeep = '3'
     def oldItemsDaysKeep = '1'
     def jobName
     def scriptPath
     def credentialsId
+}*/
+
+class JobConfig {
+    String URL
+    String oldItemsNumKeep = '3'
+    String oldItemsDaysKeep = '1'
+    String jobName
+    String scriptPath
+    String credentialsId
 }
 
 String folderSource = '''
