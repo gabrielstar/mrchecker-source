@@ -1,11 +1,11 @@
 // CONFIG START
 class JobConfig {
-    def URL
+    def URL = ''
     def oldItemsNumKeep = '3'
     def oldItemsDaysKeep = '1'
-    def jobName
-    def scriptPath
-    def credentialsId
+    def jobName = ''
+    def scriptPath = ''
+    def credentialsId = ''
 }
 
 String folderSource = '''
