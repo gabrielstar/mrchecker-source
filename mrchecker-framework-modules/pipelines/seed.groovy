@@ -1,17 +1,10 @@
-import groovy.transform.Field
 // CONFIG START
-class JobConfig {
-    @Field
+class JobConfig implements Serializable{
     def URL = ''
-    @Field
     def oldItemsNumKeep = '3'
-    @Field
     def oldItemsDaysKeep = '1'
-    @Field
     def jobName = ''
-    @Field
     def scriptPath = ''
-    @Field
     def credentialsId = ''
 }
 
