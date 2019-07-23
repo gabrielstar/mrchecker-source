@@ -1,3 +1,4 @@
+import groovy.transform.Field
 // CONFIG START
 class JobConfig {
     @Field
