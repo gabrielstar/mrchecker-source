@@ -1,4 +1,5 @@
 // CONFIG START
+@NonCPS
 class JobConfig {
     def URL
     def oldItemsNumKeep = '3'
